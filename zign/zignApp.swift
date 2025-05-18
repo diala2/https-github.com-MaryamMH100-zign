@@ -4,11 +4,10 @@
 //
 //  Created by Diala Abdulnasser Fayoumi on 08/11/1446 AH.
 //
-
+// MARK: - App Entry
 import SwiftUI
-
 @main
-struct zignApp: App {
+struct FlowchartApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
