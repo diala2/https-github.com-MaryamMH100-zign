@@ -23,12 +23,13 @@ struct ContentView: View {
     @State private var incorrectElementIDs: [UUID] = []
     @State private var showingScore = false
     @State private var incorrectAnswersCount = 0
-
+    @Environment(\.dismiss) private var dismiss
+    @State private var navigateToScore = false
 
     
     private let scenarios: [FlowchartScenario] = [
         FlowchartScenario(
-            title: "Level 1",
+            title: "Level 5",
             prompt: "Create a flowchart showing the steps of a person leaving their house and getting into their car, from the start until they get in the car.",
             elements: [
               
@@ -59,7 +60,7 @@ struct ContentView: View {
             ]
         ),
         FlowchartScenario(
-            title: "Level 2",
+            title: "Level 6",
             prompt: "Help 'Sarah' create a new account in a home workout app. Arrange the UI flow so the user can register easily.",
             elements: [
                 ("Open app", .oval),
@@ -176,24 +177,44 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             let screenHeight = geometry.size.height
-            
+         
+        
             VStack(spacing: 20) {
+                HStack {
+                    ZStack {
+                        let scenario = scenarios[currentScenarioIndex]
+                        Circle()
+                            .fill(Color.backButton)
+                            .frame(width: 64, height: 64)
+                        Image(systemName: "arrow.backward")
+                        
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                        Text(scenario.title)
+                            .font(.custom("SF Pro Rounded", size: 34))
+                                                    .foregroundColor(Color(UIColor.textSubtle))
+                                                    .offset(x: 400, y: 1)
+                        
+                    }  .onTapGesture {
+                        dismiss()}
+                    .offset(x: 30, y: 70)
+                                       
+                    .padding(.leading, 20)
+                    
+                    Spacer()
+                }
+                .padding(.bottom, 140)
                 let scenario = scenarios[currentScenarioIndex]
-                Text(scenario.title)
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .cornerRadius(20)
-                    .padding(.horizontal)
+          
                 
                 Text(scenario.prompt)
                     .font(.title2.bold())
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 20).stroke(accentYellow, lineWidth: 3))
+                    .background(RoundedRectangle(cornerRadius: 20).stroke(accentYellow, lineWidth: 3).frame(height: 180))
                     .padding(.horizontal)
+                    .padding(.bottom, 180)
                 ZStack(alignment: .topLeading) {
                     // Canvas background
                     RoundedRectangle(cornerRadius: 52)
@@ -205,7 +226,7 @@ struct ContentView: View {
                         .frame(width: 976, height: 645)
                         .clipped()
                         .cornerRadius(52)
-                    
+                        .padding(.bottom, 120)
                     // Arrows
                     ForEach(flowchartElements, id: \.id) { fromElement in
                         ForEach(fromElement.connections, id: \.self) { toID in
@@ -319,55 +340,82 @@ struct ContentView: View {
                                 }
                         }
                         Button(action: {
-                                          isEditing.toggle()
-                                      }) {
-                                          Text(isEditing ? "Done Editing" : "Edit Mode")
-                                              .font(.subheadline.bold())
-                                              .padding(10)
-                                              .background(Color.red.opacity(0.85))
-                                              .foregroundColor(.white)
-                                              .cornerRadius(12)
-                                      }
-                                      .padding(.bottom, 8)
+                            isEditing.toggle()
+                        }) {
+                            Text(isEditing ? "Done Editing" : "Edit Mode")
+                                .font(.subheadline.bold())
+                                .padding(10)
+                                .background(Color.black.opacity(0.85))
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .offset(x: -70)
+                        .padding(.bottom, 19)
                     }
+                   
                     .padding(12)
                     .background(Color.white)
                     .cornerRadius(20)
                     .shadow(radius: 3)
                     .padding(-150)// Optional: space between canvas and toolbar
                 }
+                .offset(y:-40)
                 .padding(.horizontal)
-                
-                ScrollView(.horizontal) {
-                    HStack(spacing: 15) {
-                        ForEach(textItems, id: \.self) { text in
-                            Text(text)
-                                .font(.headline) // Adjust font style
+                ZStack {
+                    // Outer gray rounded background
+                    RoundedRectangle(cornerRadius: 30)
+                        .fill(Color.gray.opacity(0.5))
+                        .frame(height: 120)
+                        .padding(.horizontal, 40)
+
+                    // Inner black rounded container
+                    RoundedRectangle(cornerRadius: 100)
+                        .fill(Color.black)
+                        .padding(8)
+                        .padding(.horizontal, 40)
+                        .frame(height: 120)
+
+                    // Content: ScrollView + optional message
+                    VStack(spacing: 10) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 15) {
+                                ForEach(textItems, id: \.self) { text in
+                                    Text(text)
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(52)
+                                    
+                                        .onTapGesture {
+                                            if !textItems.contains(text) {
+                                                textItems.append(text)
+                                            }
+                                        }
+                                        .onDrag {
+                                            draggedText = text
+                                            return NSItemProvider(object: text as NSString)
+                                        }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                       
+                            
+                        }
+
+                        if let message = resultMessage {
+                            Text(message)
                                 .foregroundColor(.white)
-                                .padding(10)
-                                .background(Color.gray.opacity(0.2)) // Match design
-                                .cornerRadius(52)
-                                .onTapGesture {
-                                    if !textItems.contains(text) {
-                                        textItems.append(text)
-                                    }
-                                }
-                                .onDrag {
-                                    draggedText = text
-                                    return NSItemProvider(object: text as NSString)
-                                }
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 12)
                         }
                     }
-                    .padding()
-                    .background(Color(red: 0.85, green: 0.85, blue: 0.85).opacity(0.2)) // Background for the selector
-                    .cornerRadius(16)
+                    .padding(.horizontal, 48) // to match the rectangles
+                    
                 }
-                
-                if let message = resultMessage {
-                    Text(message)
-                        .foregroundColor(.white)
-                        .padding(.bottom, 10)
-                }
+
 //                Button(action: {
 //                    isEditing.toggle()
 //                }) {
@@ -380,12 +428,11 @@ struct ContentView: View {
 //                }
 //                .padding(.bottom, 8)
                 Button(action: {
+                    // Run all validation logic
                     showingCorrectConnections = true
                     let currentScenario = scenarios[currentScenarioIndex]
-                    
                     incorrectElementIDs = []
-                    
-                    // Check element shapes
+
                     for (expectedText, expectedShape) in currentScenario.elements {
                         if let element = flowchartElements.first(where: { $0.text == expectedText }) {
                             if element.shape != expectedShape {
@@ -393,8 +440,7 @@ struct ContentView: View {
                             }
                         }
                     }
-                    
-                    // Check connections
+
                     for (fromText, toText) in currentScenario.connections {
                         guard let fromElement = flowchartElements.first(where: { $0.text == fromText }),
                               let toElement = flowchartElements.first(where: { $0.text == toText }) else {
@@ -404,11 +450,16 @@ struct ContentView: View {
                             incorrectElementIDs.append(fromElement.id)
                         }
                     }
-                    
-                    // Count incorrects and show score
+
                     incorrectAnswersCount = incorrectElementIDs.count
                     showingScore = true
-                    
+
+                    // ✅ Always trigger navigation with a slight delay to let SwiftUI finish UI updates
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        navigateToScore = false // Force reset in case it's stuck true
+                        navigateToScore = true
+                    }
+
                 }) {
                     Text("Check")
                         .font(.headline)
@@ -419,6 +470,13 @@ struct ContentView: View {
                         .cornerRadius(40)
                         .padding(.horizontal)
                 }
+                NavigationLink(
+                    destination: StarView(incorrectAnswersCount: incorrectAnswersCount),
+                    isActive: $navigateToScore
+                ) {
+                    EmptyView()
+                }
+
             }
             
             .frame(maxHeight: .infinity)
@@ -426,8 +484,41 @@ struct ContentView: View {
             .edgesIgnoringSafeArea(.all)
 
         }
+        NavigationLink(
+            destination: StarView(incorrectAnswersCount: incorrectAnswersCount),
+            isActive: $navigateToScore
+        ) {
+            EmptyView()
+        }
         
     }
+    func checkUserSolution() {
+        incorrectElementIDs = []
+        let currentScenario = scenarios[currentScenarioIndex]
+
+        // Check shapes
+        for (expectedText, expectedShape) in currentScenario.elements {
+            if let element = flowchartElements.first(where: { $0.text == expectedText }) {
+                if element.shape != expectedShape {
+                    incorrectElementIDs.append(element.id)
+                }
+            }
+        }
+
+        // Check connections
+        for (fromText, toText) in currentScenario.connections {
+            guard let fromElement = flowchartElements.first(where: { $0.text == fromText }),
+                  let toElement = flowchartElements.first(where: { $0.text == toText }) else { continue }
+
+            if !fromElement.connections.contains(toElement.id) {
+                incorrectElementIDs.append(fromElement.id)
+            }
+        }
+
+        incorrectAnswersCount = incorrectElementIDs.count
+        navigateToScore = true
+    }
+
 
 
     func adjustedPoint(from: CGPoint, to: CGPoint) -> CGPoint {
@@ -486,6 +577,7 @@ struct ContentView: View {
         }
     }
 }
+   
  func addDecisionArrows(for decisionElement: FlowchartElement) {
     // Check if this decision already has two arrows (don't add duplicates)
     let existingConnections = decisionElement.connections.count

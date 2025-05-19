@@ -29,7 +29,7 @@ struct FlowchartNode: View {
                     .overlay(
                         Diamond()
                             .stroke(isSelected ? Color.red : Color.black, lineWidth: isSelected ? 3 : 1)
-                        
+                            .foregroundColor(Color.black)
                     )
 
             case .oval:

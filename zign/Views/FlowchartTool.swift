@@ -25,7 +25,7 @@ struct FlowchartTool: View {
             case .parallelogram:
                 Parallelogram().stroke( lineWidth: 2).frame(width: 50, height: 30)
             case .arrow:
-                Image(systemName: "trash")
+                Image(systemName: "")
                     .resizable()
                     .scaledToFit()
                     .foregroundColor(.red)
